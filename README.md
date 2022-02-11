@@ -19,6 +19,10 @@ $ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
 Step 3: Add `go/bin/` to your PATH
 
-Step 4: Run the command under `proto/gen.sh` to generate protoc Go files
+Step 4: Run this command to generate protoc Go files
+
+```sh
+$ protoc --go_out=. --go-grpc_out=. proto/*.proto
+```
 
 Step 5: Run the app by `go run lib/main.go` 
