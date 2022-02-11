@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package user;
-option go_package = "lib/core/generated/";
+option go_package = "lib/core/generated/userpb";
 
 message User {
   string full_name = 1;
