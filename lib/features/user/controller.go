@@ -20,6 +20,10 @@ func InitAndGetUserServices() userpb.UserServiceServer {
 	}
 }
 
-func (controller *UserController) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.User, error) {
-	return controller.repository.createUser(req)
+func (ctr *UserController) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.User, error) {
+	return ctr.repository.createUser(req)
+}
+
+func (ctr *UserController) GetUsers(ctx context.Context, req *userpb.GetUsersRequest) (*userpb.GetUsersResponse, error) {
+	return ctr.getUsers(req)
 }

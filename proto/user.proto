@@ -10,10 +10,18 @@ message User {
 }
 
 message CreateUserRequest {
-  User  user = 1;
+  User user = 1;
   string password = 2;
 }
 
+message GetUsersRequest {
+  string search = 1;
+  int32 skip = 2;
+  int32 take = 3;
+}
+message GetUsersResponse { repeated User users = 1; }
+
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (User) {}
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
 }
