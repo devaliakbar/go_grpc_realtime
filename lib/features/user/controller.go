@@ -6,11 +6,17 @@ import (
 	"log"
 )
 
-type UserServer struct {
+func InitAndGetUserServices() *UserController {
+	migrateDb()
+
+	return &UserController{}
+}
+
+type UserController struct {
 	userpb.UnimplementedUserServiceServer
 }
 
-func (*UserServer) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.User, error) {
+func (*UserController) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.User, error) {
 	log.Printf("--->CreateUser: %v", req.GetUser())
 
 	return &userpb.User{

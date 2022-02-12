@@ -24,7 +24,7 @@ func RunServer() {
 	s := grpc.NewServer(opts...)
 
 	///Registering 'UserService'
-	userpb.RegisterUserServiceServer(s, &user.UserServer{})
+	userpb.RegisterUserServiceServer(s, user.InitAndGetUserServices())
 
 	///Registering reflection for API visualization using 'evans'
 	reflection.Register(s)
