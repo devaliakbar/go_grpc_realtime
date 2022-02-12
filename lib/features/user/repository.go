@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go_grpc_realtime/lib/core/database"
 	"go_grpc_realtime/lib/core/generated/userpb"
+	"go_grpc_realtime/lib/core/jwtmanager"
 	"go_grpc_realtime/lib/core/utils"
 	"strconv"
 	"strings"
@@ -20,7 +21,7 @@ func (*repository) migrateDb() {
 	database.DB.AutoMigrate(&UserTbl{})
 }
 
-func (repo *repository) createUser(req *userpb.CreateUserRequest) (*userpb.User, error) {
+func (repo *repository) signUp(req *userpb.SignUpRequest) (*userpb.SignUpResponse, error) {
 	if valErr := repo.Validation.ValidateEditUserRequest(req); valErr != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -40,10 +41,21 @@ func (repo *repository) createUser(req *userpb.CreateUserRequest) (*userpb.User,
 		)
 	}
 
-	return &userpb.User{
-		Id:       fmt.Sprint(usr.ID),
-		FullName: usr.FullName,
-		Email:    usr.Email,
+	jwtTkn, jwtErr := jwtmanager.CreateToken(usr.ID)
+	if jwtErr != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			jwtErr.Error(),
+		)
+	}
+
+	return &userpb.SignUpResponse{
+		User: &userpb.User{
+			Id:       fmt.Sprint(usr.ID),
+			FullName: usr.FullName,
+			Email:    usr.Email,
+		},
+		JwtToken: jwtTkn,
 	}, nil
 }
 
@@ -85,7 +97,7 @@ func (repo *repository) getUsers(req *userpb.GetUsersRequest) (*userpb.GetUsersR
 	}, nil
 }
 
-func (repo *repository) updateUser(req *userpb.CreateUserRequest) (*userpb.User, error) {
+func (repo *repository) updateUser(req *userpb.SignUpRequest) (*userpb.User, error) {
 	userId, err := strconv.Atoi(req.GetUser().GetId())
 	if err != nil {
 		return nil, status.Errorf(

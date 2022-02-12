@@ -9,9 +9,14 @@ message User {
   string email = 3;
 }
 
-message CreateUserRequest {
+message SignUpRequest {
   User user = 1;
   string password = 2;
+}
+
+message SignUpResponse {
+  User user = 1;
+  string jwt_token = 2;
 }
 
 message GetUsersRequest {
@@ -22,7 +27,7 @@ message GetUsersRequest {
 message GetUsersResponse { repeated User users = 1; }
 
 service UserService {
-  rpc CreateUser(CreateUserRequest) returns (User) {}
+  rpc SignUp(SignUpRequest) returns (SignUpResponse) {}
   rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
-  rpc UpdateUser(CreateUserRequest) returns (User) {}
+  rpc UpdateUser(SignUpRequest) returns (User) {}
 }

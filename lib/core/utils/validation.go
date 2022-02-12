@@ -9,7 +9,7 @@ import (
 
 type Validation struct{}
 
-func (val *Validation) ValidateEditUserRequest(req *userpb.CreateUserRequest) error {
+func (val *Validation) ValidateEditUserRequest(req *userpb.SignUpRequest) error {
 	if err := val.IsStringValid(req.GetUser().GetFullName()); err != nil {
 		return errors.New("full name is empty")
 	}

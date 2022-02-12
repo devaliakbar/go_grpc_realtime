@@ -8,6 +8,10 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
+type userIdKeyType string
+
+const USER_ID_KEY userIdKeyType = "userId"
+
 const JWT_SECRET = "123456"
 
 func CreateToken(user_id uint) (string, error) {
