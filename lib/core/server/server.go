@@ -1,7 +1,9 @@
 package server
 
 import (
+	"go_grpc_realtime/lib/core/database"
 	"go_grpc_realtime/lib/core/generated/userpb"
+	"go_grpc_realtime/lib/core/interceptors"
 	"go_grpc_realtime/lib/features/user"
 	"log"
 	"net"
@@ -13,13 +15,18 @@ import (
 )
 
 func RunServer() {
+	database.InitializeDb()
+
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
 
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	opts := []grpc.ServerOption{}
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(interceptors.GetUnaryInterceptor()),
+		grpc.StreamInterceptor(interceptors.GetStreamInterceptor()),
+	}
 
 	s := grpc.NewServer(opts...)
 
