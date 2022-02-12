@@ -4,18 +4,27 @@ import (
 	"fmt"
 	"go_grpc_realtime/lib/core/database"
 	"go_grpc_realtime/lib/core/generated/userpb"
+	"go_grpc_realtime/lib/core/utils"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type repository struct{}
+type repository struct {
+	*utils.Validation
+}
 
 func (*repository) migrateDb() {
 	database.DB.AutoMigrate(&User{})
 }
 
-func (*repository) createUser(req *userpb.CreateUserRequest) (*userpb.User, error) {
+func (repo *repository) createUser(req *userpb.CreateUserRequest) (*userpb.User, error) {
+	if valErr := repo.Validation.ValidateEditUserRequest(req); valErr != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			valErr.Error(),
+		)
+	}
 
 	usr := User{
 		FullName: req.GetUser().GetFullName(),
@@ -31,7 +40,7 @@ func (*repository) createUser(req *userpb.CreateUserRequest) (*userpb.User, erro
 
 	return &userpb.User{
 		Id:       fmt.Sprint(usr.ID),
-		FullName: req.GetUser().GetFullName(),
-		Email:    req.GetUser().GetEmail(),
+		FullName: usr.FullName,
+		Email:    usr.Email,
 	}, nil
 }
