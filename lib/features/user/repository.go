@@ -5,6 +5,7 @@ import (
 	"go_grpc_realtime/lib/core/database"
 	"go_grpc_realtime/lib/core/generated/userpb"
 	"go_grpc_realtime/lib/core/utils"
+	"strconv"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -81,5 +82,71 @@ func (repo *repository) getUsers(req *userpb.GetUsersRequest) (*userpb.GetUsersR
 
 	return &userpb.GetUsersResponse{
 		Users: returnUsers,
+	}, nil
+}
+
+func (repo *repository) updateUser(req *userpb.CreateUserRequest) (*userpb.User, error) {
+	userId, err := strconv.Atoi(req.GetUser().GetId())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"User not found",
+		)
+	}
+
+	var usr UserTbl
+	if err := database.DB.Where("id = ?", uint(userId)).First(&usr).Error; err != nil {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"User not found",
+		)
+	}
+
+	updateBody := map[string]interface{}{}
+
+	if req.GetUser().FullName != "" {
+		if err := repo.Validation.IsStringValid(req.GetUser().GetFullName()); err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"full name is empty",
+			)
+		}
+
+		updateBody["full_name"] = strings.TrimSpace(req.GetUser().GetFullName())
+	}
+
+	if req.GetUser().GetEmail() != "" {
+		if err := repo.Validation.IsEmail(req.GetUser().GetEmail()); err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				err.Error(),
+			)
+		}
+
+		updateBody["email"] = strings.TrimSpace(req.GetUser().GetEmail())
+	}
+
+	if req.GetPassword() != "" {
+		if err := repo.Validation.IsPasswordValid(req.GetPassword()); err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				err.Error(),
+			)
+		}
+
+		updateBody["password"] = strings.TrimSpace(req.GetPassword())
+	}
+
+	if err := database.DB.Model(&usr).Updates(updateBody).Error; err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			err.Error(),
+		)
+	}
+
+	return &userpb.User{
+		Id:       fmt.Sprint(usr.ID),
+		FullName: usr.FullName,
+		Email:    usr.Email,
 	}, nil
 }

@@ -24,4 +24,5 @@ message GetUsersResponse { repeated User users = 1; }
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (User) {}
   rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
+  rpc UpdateUser(CreateUserRequest) returns (User) {}
 }

@@ -27,3 +27,7 @@ func (ctr *UserController) CreateUser(ctx context.Context, req *userpb.CreateUse
 func (ctr *UserController) GetUsers(ctx context.Context, req *userpb.GetUsersRequest) (*userpb.GetUsersResponse, error) {
 	return ctr.getUsers(req)
 }
+
+func (ctr *UserController) UpdateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.User, error) {
+	return ctr.repository.updateUser(req)
+}
