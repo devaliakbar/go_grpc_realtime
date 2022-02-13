@@ -3,7 +3,11 @@ package message
 import (
 	"context"
 	"go_grpc_realtime/lib/core/grpcgen"
+	"go_grpc_realtime/lib/core/jwtmanager"
 	"log"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type MessageController struct {
@@ -22,8 +26,15 @@ func InitAndGetMessageServices() grpcgen.MessageServiceServer {
 }
 
 func (ctr *MessageController) CreateMessageRoom(ctx context.Context, req *grpcgen.CreateMessageRoomRequest) (*grpcgen.MessageRoom, error) {
-	log.Println("CreateRoom")
-	return nil, nil
+	userId, ok := ctx.Value(jwtmanager.USER_ID_KEY).(uint)
+	if !ok {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"user not found",
+		)
+	}
+
+	return ctr.createMessageRoom(req, userId)
 }
 
 func (ctr *MessageController) GetMessageRooms(ctx context.Context, req *grpcgen.GetMessageRoomsRequest) (*grpcgen.GetMessageRoomsResponse, error) {

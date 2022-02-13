@@ -38,7 +38,7 @@ func (ctr *UserController) UpdateUser(ctx context.Context, req *grpcgen.UpdateUs
 	if !ok {
 		return nil, status.Errorf(
 			codes.NotFound,
-			"User not found",
+			"user not found",
 		)
 	}
 

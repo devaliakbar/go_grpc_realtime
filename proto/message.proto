@@ -10,6 +10,7 @@ message MessageRoom {
   string id = 1;
   string room_name = 2;
   bool is_one_to_one = 3;
+  repeated user.User members = 4;
 }
 
 message CreateMessageRoomRequest {
@@ -51,7 +52,8 @@ message GetMessagesResponse { repeated Message messages = 1; }
 
 service MessageService {
   rpc CreateMessageRoom(CreateMessageRoomRequest) returns (MessageRoom) {}
-  rpc GetMessageRooms(GetMessageRoomsRequest) returns (GetMessageRoomsResponse) {}
+  rpc GetMessageRooms(GetMessageRoomsRequest)
+      returns (GetMessageRoomsResponse) {}
   rpc GetMessageRoomMembers(GetMessageRoomMembersRequest)
       returns (GetMessageRoomMembersResponse) {}
   rpc SendMessage(SendMessageRequest) returns (Message) {}
