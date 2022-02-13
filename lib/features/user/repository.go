@@ -28,10 +28,18 @@ func (repo *repository) signUp(req *userpb.SignUpRequest) (*userpb.SignUpRespons
 		)
 	}
 
+	hashPass, hashErr := utils.GenerateHashPassword(strings.TrimSpace(req.GetPassword()))
+	if hashErr != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			hashErr.Error(),
+		)
+	}
+
 	usr := UserTbl{
-		FullName: req.GetUser().GetFullName(),
-		Email:    req.GetUser().GetEmail(),
-		Password: req.GetPassword(),
+		FullName: strings.TrimSpace(req.GetUser().GetFullName()),
+		Email:    strings.TrimSpace(req.GetUser().GetEmail()),
+		Password: hashPass,
 	}
 	if err := database.DB.Create(&usr).Error; err != nil {
 		return nil, status.Errorf(
@@ -60,10 +68,18 @@ func (repo *repository) signUp(req *userpb.SignUpRequest) (*userpb.SignUpRespons
 
 func (repo *repository) loginUp(req *userpb.LoginRequest) (*userpb.SignUpResponse, error) {
 	var usr UserTbl
-	if err := database.DB.Where("email = ? AND password = ?", req.GetEmail(), req.GetPassword()).First(&usr).Error; err != nil {
+	if err := database.DB.Where("email = ?", req.GetEmail()).First(&usr).Error; err != nil {
 		return nil, status.Errorf(
 			codes.Unauthenticated,
-			"invalid username or password",
+			"invalid email or password",
+		)
+	}
+
+	isPasswordCor := utils.CheckPasswordCorHash(req.GetPassword(), usr.Password)
+	if !isPasswordCor {
+		return nil, status.Errorf(
+			codes.Unauthenticated,
+			"invalid email or password",
 		)
 	}
 
@@ -164,7 +180,15 @@ func (repo *repository) updateUser(req *userpb.UpdateUserRequest, userId uint) (
 			)
 		}
 
-		updateBody["password"] = strings.TrimSpace(req.GetPassword())
+		hashPass, hashErr := utils.GenerateHashPassword(strings.TrimSpace(req.GetPassword()))
+		if hashErr != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				hashErr.Error(),
+			)
+		}
+
+		updateBody["password"] = hashPass
 	}
 
 	if err := database.DB.Model(&usr).Updates(updateBody).Error; err != nil {
