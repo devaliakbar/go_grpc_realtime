@@ -76,11 +76,7 @@ func (repo *repository) createMessageRoom(req *grpcgen.CreateMessageRoomRequest,
 	}
 	if !req.IsOneToOne {
 		lastUpdate := time.Now()
-		room = RoomTbl{
-			Name:        roomName,
-			IsOneToOne:  req.GetIsOneToOne(),
-			LastUpdated: &lastUpdate,
-		}
+		room.LastUpdated = &lastUpdate
 	}
 	if crtRmErr := transactionDb.Create(&room).Error; crtRmErr != nil {
 		transactionDb.Rollback()
