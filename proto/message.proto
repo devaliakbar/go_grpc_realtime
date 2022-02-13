@@ -10,7 +10,6 @@ message MessageRoom {
   string id = 1;
   string room_name = 2;
   bool is_one_to_one = 3;
-  repeated user.User members = 4;
 }
 
 message CreateMessageRoomRequest {
@@ -20,12 +19,15 @@ message CreateMessageRoomRequest {
   repeated string members = 3;
 }
 
-message GetRoomsRequest {
+message GetMessageRoomsRequest {
   string search = 1;
   int32 skip = 2;
   int32 take = 3;
 }
-message GetRoomsResponse { repeated MessageRoom rooms = 1; }
+message GetMessageRoomsResponse { repeated MessageRoom rooms = 1; }
+
+message GetMessageRoomMembersRequest { string room_id = 1; }
+message GetMessageRoomMembersResponse { repeated user.User members = 2; }
 
 message Message {
   string id = 1;
@@ -49,7 +51,9 @@ message GetMessagesResponse { repeated Message messages = 1; }
 
 service MessageService {
   rpc CreateMessageRoom(CreateMessageRoomRequest) returns (MessageRoom) {}
-  rpc GetMessageRooms(GetRoomsRequest) returns (GetRoomsResponse) {}
+  rpc GetMessageRooms(GetMessageRoomsRequest) returns (GetMessageRoomsResponse) {}
+  rpc GetMessageRoomMembers(GetMessageRoomMembersRequest)
+      returns (GetMessageRoomMembersResponse) {}
   rpc SendMessage(SendMessageRequest) returns (Message) {}
   rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse) {}
 }

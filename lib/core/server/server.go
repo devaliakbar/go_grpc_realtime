@@ -4,6 +4,7 @@ import (
 	"go_grpc_realtime/lib/core/database"
 	"go_grpc_realtime/lib/core/grpcgen"
 	"go_grpc_realtime/lib/core/interceptors"
+	"go_grpc_realtime/lib/features/message"
 	"go_grpc_realtime/lib/features/user"
 	"log"
 	"net"
@@ -32,7 +33,8 @@ func RunServer() {
 
 	///Registering 'UserService'
 	grpcgen.RegisterUserServiceServer(s, user.InitAndGetUserServices())
-
+	///Registering 'MessageService'
+	grpcgen.RegisterMessageServiceServer(s, message.InitAndGetMessageServices())
 	///Registering reflection for API visualization using 'evans'
 	reflection.Register(s)
 
