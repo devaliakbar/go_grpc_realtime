@@ -66,11 +66,15 @@ func (repo *repository) createMessageRoom(req *grpcgen.CreateMessageRoomRequest,
 		//This will help in future to check weather that particular one to one room already exist or not
 		roomName = fmt.Sprintf("%d-%d", members[0], members[1])
 	}
+
+	transactionDb := database.DB.Begin()
+
 	room := RoomTbl{
 		Name:       roomName,
 		IsOneToOne: req.GetIsOneToOne(),
 	}
-	if crtRmErr := database.DB.Create(&room).Error; crtRmErr != nil {
+	if crtRmErr := transactionDb.Create(&room).Error; crtRmErr != nil {
+		transactionDb.Rollback()
 		return nil, status.Errorf(
 			codes.Internal,
 			crtRmErr.Error(),
@@ -82,6 +86,7 @@ func (repo *repository) createMessageRoom(req *grpcgen.CreateMessageRoomRequest,
 	for _, mem := range members {
 		var usr user.UserTbl
 		if err := database.DB.Where("id = ?", mem).First(&usr).Error; err != nil {
+			transactionDb.Rollback()
 			return nil, status.Errorf(
 				codes.NotFound,
 				"User not found",
@@ -93,7 +98,8 @@ func (repo *repository) createMessageRoom(req *grpcgen.CreateMessageRoomRequest,
 			RoomId: room.ID,
 			UserId: mem,
 		}
-		if addMemErr := database.DB.Create(&rmMem).Error; addMemErr != nil {
+		if addMemErr := transactionDb.Create(&rmMem).Error; addMemErr != nil {
+			transactionDb.Rollback()
 			return nil, status.Errorf(
 				codes.Internal,
 				addMemErr.Error(),
@@ -113,6 +119,7 @@ func (repo *repository) createMessageRoom(req *grpcgen.CreateMessageRoomRequest,
 		roomName = grpMem[0].FullName
 	}
 
+	transactionDb.Commit()
 	return &grpcgen.MessageRoom{
 		Id:         fmt.Sprint(room.ID),
 		RoomName:   roomName,
