@@ -7,6 +7,7 @@ import (
 	"go_grpc_realtime/lib/core/utils"
 	"go_grpc_realtime/lib/features/user"
 	"strings"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -73,6 +74,14 @@ func (repo *repository) createMessageRoom(req *grpcgen.CreateMessageRoomRequest,
 		Name:       roomName,
 		IsOneToOne: req.GetIsOneToOne(),
 	}
+	if !req.IsOneToOne {
+		lastUpdate := time.Now()
+		room = RoomTbl{
+			Name:        roomName,
+			IsOneToOne:  req.GetIsOneToOne(),
+			LastUpdated: &lastUpdate,
+		}
+	}
 	if crtRmErr := transactionDb.Create(&room).Error; crtRmErr != nil {
 		transactionDb.Rollback()
 		return nil, status.Errorf(
@@ -112,6 +121,22 @@ func (repo *repository) createMessageRoom(req *grpcgen.CreateMessageRoomRequest,
 				FullName: usr.FullName,
 				Email:    usr.Email,
 			})
+		}
+	}
+
+	///If not One-To-One, add a message regarding who created group
+	if !req.IsOneToOne {
+		grpMsg := MessageTbl{
+			RoomId:   room.ID,
+			SenderId: uid,
+			Body:     "created group",
+		}
+		if addMesErr := transactionDb.Create(&grpMsg).Error; addMesErr != nil {
+			transactionDb.Rollback()
+			return nil, status.Errorf(
+				codes.Internal,
+				addMesErr.Error(),
+			)
 		}
 	}
 
