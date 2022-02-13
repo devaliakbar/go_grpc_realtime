@@ -6,7 +6,6 @@ import (
 	"go_grpc_realtime/lib/core/generated/userpb"
 	"go_grpc_realtime/lib/core/jwtmanager"
 	"go_grpc_realtime/lib/core/utils"
-	"strconv"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -97,17 +96,9 @@ func (repo *repository) getUsers(req *userpb.GetUsersRequest) (*userpb.GetUsersR
 	}, nil
 }
 
-func (repo *repository) updateUser(req *userpb.SignUpRequest) (*userpb.User, error) {
-	userId, err := strconv.Atoi(req.GetUser().GetId())
-	if err != nil {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"User not found",
-		)
-	}
-
+func (repo *repository) updateUser(req *userpb.UpdateUserRequest, userId uint) (*userpb.User, error) {
 	var usr UserTbl
-	if err := database.DB.Where("id = ?", uint(userId)).First(&usr).Error; err != nil {
+	if err := database.DB.Where("id = ?", userId).First(&usr).Error; err != nil {
 		return nil, status.Errorf(
 			codes.NotFound,
 			"User not found",
@@ -116,26 +107,26 @@ func (repo *repository) updateUser(req *userpb.SignUpRequest) (*userpb.User, err
 
 	updateBody := map[string]interface{}{}
 
-	if req.GetUser().FullName != "" {
-		if err := repo.Validation.IsStringValid(req.GetUser().GetFullName()); err != nil {
+	if req.GetFullName() != "" {
+		if err := repo.Validation.IsStringValid(req.GetFullName()); err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				"full name is empty",
 			)
 		}
 
-		updateBody["full_name"] = strings.TrimSpace(req.GetUser().GetFullName())
+		updateBody["full_name"] = strings.TrimSpace(req.GetFullName())
 	}
 
-	if req.GetUser().GetEmail() != "" {
-		if err := repo.Validation.IsEmail(req.GetUser().GetEmail()); err != nil {
+	if req.GetEmail() != "" {
+		if err := repo.Validation.IsEmail(req.GetEmail()); err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				err.Error(),
 			)
 		}
 
-		updateBody["email"] = strings.TrimSpace(req.GetUser().GetEmail())
+		updateBody["email"] = strings.TrimSpace(req.GetEmail())
 	}
 
 	if req.GetPassword() != "" {

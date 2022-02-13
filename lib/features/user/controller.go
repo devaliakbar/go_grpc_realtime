@@ -3,6 +3,10 @@ package user
 import (
 	"context"
 	"go_grpc_realtime/lib/core/generated/userpb"
+	"go_grpc_realtime/lib/core/jwtmanager"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserController struct {
@@ -28,6 +32,15 @@ func (ctr *UserController) GetUsers(ctx context.Context, req *userpb.GetUsersReq
 	return ctr.getUsers(req)
 }
 
-func (ctr *UserController) UpdateUser(ctx context.Context, req *userpb.SignUpRequest) (*userpb.User, error) {
-	return ctr.repository.updateUser(req)
+func (ctr *UserController) UpdateUser(ctx context.Context, req *userpb.UpdateUserRequest) (*userpb.User, error) {
+	userId, ok := ctx.Value(jwtmanager.USER_ID_KEY).(uint)
+
+	if !ok {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"User not found",
+		)
+	}
+
+	return ctr.repository.updateUser(req, userId)
 }
