@@ -18,6 +18,8 @@ type repository struct {
 
 func (*repository) migrateDb() {
 	database.DB.AutoMigrate(&UserTbl{})
+
+	//seedUser()
 }
 
 func (repo *repository) signUp(req *grpcgen.SignUpRequest) (*grpcgen.SignUpResponse, error) {
@@ -203,4 +205,50 @@ func (repo *repository) updateUser(req *grpcgen.UpdateUserRequest, userId uint) 
 		FullName: usr.FullName,
 		Email:    usr.Email,
 	}, nil
+}
+
+func seedUser() {
+	pass, _ := utils.GenerateHashPassword("123456")
+
+	usr := UserTbl{
+		FullName: "Akbar",
+		Email:    "akbar@email.com",
+		Password: pass,
+	}
+	database.DB.Create(&usr)
+
+	usr = UserTbl{
+		FullName: "Akshay",
+		Email:    "akshay@email.com",
+		Password: pass,
+	}
+	database.DB.Create(&usr)
+
+	usr = UserTbl{
+		FullName: "Ali",
+		Email:    "ali@email.com",
+		Password: pass,
+	}
+	database.DB.Create(&usr)
+
+	usr = UserTbl{
+		FullName: "Anoop",
+		Email:    "anoop@email.com",
+		Password: pass,
+	}
+	database.DB.Create(&usr)
+
+	usr = UserTbl{
+		FullName: "Dua",
+		Email:    "dua@email.com",
+		Password: pass,
+	}
+	database.DB.Create(&usr)
+
+	usr = UserTbl{
+		FullName: "Lipa",
+		Email:    "lipa@email.com",
+		Password: pass,
+	}
+	database.DB.Create(&usr)
 }
