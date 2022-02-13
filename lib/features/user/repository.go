@@ -3,7 +3,7 @@ package user
 import (
 	"fmt"
 	"go_grpc_realtime/lib/core/database"
-	"go_grpc_realtime/lib/core/grpc_generated/userpb"
+	"go_grpc_realtime/lib/core/grpcgen"
 	"go_grpc_realtime/lib/core/jwtmanager"
 	"go_grpc_realtime/lib/core/utils"
 	"strings"
@@ -20,7 +20,7 @@ func (*repository) migrateDb() {
 	database.DB.AutoMigrate(&UserTbl{})
 }
 
-func (repo *repository) signUp(req *userpb.SignUpRequest) (*userpb.SignUpResponse, error) {
+func (repo *repository) signUp(req *grpcgen.SignUpRequest) (*grpcgen.SignUpResponse, error) {
 	if valErr := repo.Validation.ValidateEditUserRequest(req); valErr != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -56,8 +56,8 @@ func (repo *repository) signUp(req *userpb.SignUpRequest) (*userpb.SignUpRespons
 		)
 	}
 
-	return &userpb.SignUpResponse{
-		User: &userpb.User{
+	return &grpcgen.SignUpResponse{
+		User: &grpcgen.User{
 			Id:       fmt.Sprint(usr.ID),
 			FullName: usr.FullName,
 			Email:    usr.Email,
@@ -66,7 +66,7 @@ func (repo *repository) signUp(req *userpb.SignUpRequest) (*userpb.SignUpRespons
 	}, nil
 }
 
-func (repo *repository) loginUp(req *userpb.LoginRequest) (*userpb.SignUpResponse, error) {
+func (repo *repository) loginUp(req *grpcgen.LoginRequest) (*grpcgen.SignUpResponse, error) {
 	var usr UserTbl
 	if err := database.DB.Where("email = ?", req.GetEmail()).First(&usr).Error; err != nil {
 		return nil, status.Errorf(
@@ -91,8 +91,8 @@ func (repo *repository) loginUp(req *userpb.LoginRequest) (*userpb.SignUpRespons
 		)
 	}
 
-	return &userpb.SignUpResponse{
-		User: &userpb.User{
+	return &grpcgen.SignUpResponse{
+		User: &grpcgen.User{
 			Id:       fmt.Sprint(usr.ID),
 			FullName: usr.FullName,
 			Email:    usr.Email,
@@ -101,7 +101,7 @@ func (repo *repository) loginUp(req *userpb.LoginRequest) (*userpb.SignUpRespons
 	}, nil
 }
 
-func (repo *repository) getUsers(req *userpb.GetUsersRequest) (*userpb.GetUsersResponse, error) {
+func (repo *repository) getUsers(req *grpcgen.GetUsersRequest) (*grpcgen.GetUsersResponse, error) {
 	skip := int(req.GetSkip())
 
 	take := 10
@@ -124,22 +124,22 @@ func (repo *repository) getUsers(req *userpb.GetUsersRequest) (*userpb.GetUsersR
 
 	database.DB.Model(&UserTbl{}).Order("full_name asc").Offset(skip).Limit(take).Find(&users, opts...)
 
-	var returnUsers []*userpb.User
+	var returnUsers []*grpcgen.User
 
 	for _, user := range users {
-		returnUsers = append(returnUsers, &userpb.User{
+		returnUsers = append(returnUsers, &grpcgen.User{
 			Id:       fmt.Sprint(user.ID),
 			FullName: user.FullName,
 			Email:    user.Email,
 		})
 	}
 
-	return &userpb.GetUsersResponse{
+	return &grpcgen.GetUsersResponse{
 		Users: returnUsers,
 	}, nil
 }
 
-func (repo *repository) updateUser(req *userpb.UpdateUserRequest, userId uint) (*userpb.User, error) {
+func (repo *repository) updateUser(req *grpcgen.UpdateUserRequest, userId uint) (*grpcgen.User, error) {
 	var usr UserTbl
 	if err := database.DB.Where("id = ?", userId).First(&usr).Error; err != nil {
 		return nil, status.Errorf(
@@ -198,7 +198,7 @@ func (repo *repository) updateUser(req *userpb.UpdateUserRequest, userId uint) (
 		)
 	}
 
-	return &userpb.User{
+	return &grpcgen.User{
 		Id:       fmt.Sprint(usr.ID),
 		FullName: usr.FullName,
 		Email:    usr.Email,

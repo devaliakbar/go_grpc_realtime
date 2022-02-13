@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"go_grpc_realtime/lib/core/grpc_generated/userpb"
+	"go_grpc_realtime/lib/core/grpcgen"
 	"go_grpc_realtime/lib/core/jwtmanager"
 
 	"google.golang.org/grpc/codes"
@@ -10,11 +10,11 @@ import (
 )
 
 type UserController struct {
-	userpb.UnimplementedUserServiceServer
+	grpcgen.UnimplementedUserServiceServer
 	*repository
 }
 
-func InitAndGetUserServices() userpb.UserServiceServer {
+func InitAndGetUserServices() grpcgen.UserServiceServer {
 	repo := &repository{}
 
 	repo.migrateDb()
@@ -24,15 +24,15 @@ func InitAndGetUserServices() userpb.UserServiceServer {
 	}
 }
 
-func (ctr *UserController) SignUp(ctx context.Context, req *userpb.SignUpRequest) (*userpb.SignUpResponse, error) {
+func (ctr *UserController) SignUp(ctx context.Context, req *grpcgen.SignUpRequest) (*grpcgen.SignUpResponse, error) {
 	return ctr.repository.signUp(req)
 }
 
-func (ctr *UserController) GetUsers(ctx context.Context, req *userpb.GetUsersRequest) (*userpb.GetUsersResponse, error) {
+func (ctr *UserController) GetUsers(ctx context.Context, req *grpcgen.GetUsersRequest) (*grpcgen.GetUsersResponse, error) {
 	return ctr.getUsers(req)
 }
 
-func (ctr *UserController) UpdateUser(ctx context.Context, req *userpb.UpdateUserRequest) (*userpb.User, error) {
+func (ctr *UserController) UpdateUser(ctx context.Context, req *grpcgen.UpdateUserRequest) (*grpcgen.User, error) {
 	userId, ok := ctx.Value(jwtmanager.USER_ID_KEY).(uint)
 
 	if !ok {
@@ -45,6 +45,6 @@ func (ctr *UserController) UpdateUser(ctx context.Context, req *userpb.UpdateUse
 	return ctr.repository.updateUser(req, userId)
 }
 
-func (ctr *UserController) Login(ctx context.Context, req *userpb.LoginRequest) (*userpb.SignUpResponse, error) {
+func (ctr *UserController) Login(ctx context.Context, req *grpcgen.LoginRequest) (*grpcgen.SignUpResponse, error) {
 	return ctr.loginUp(req)
 }

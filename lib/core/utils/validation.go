@@ -2,14 +2,14 @@ package utils
 
 import (
 	"errors"
-	"go_grpc_realtime/lib/core/grpc_generated/userpb"
+	"go_grpc_realtime/lib/core/grpcgen"
 	"net/mail"
 	"strings"
 )
 
 type Validation struct{}
 
-func (val *Validation) ValidateEditUserRequest(req *userpb.SignUpRequest) error {
+func (val *Validation) ValidateEditUserRequest(req *grpcgen.SignUpRequest) error {
 	if err := val.IsStringValid(req.GetUser().GetFullName()); err != nil {
 		return errors.New("full name is empty")
 	}

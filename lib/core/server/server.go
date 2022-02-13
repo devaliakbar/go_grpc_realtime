@@ -2,7 +2,7 @@ package server
 
 import (
 	"go_grpc_realtime/lib/core/database"
-	"go_grpc_realtime/lib/core/grpc_generated/userpb"
+	"go_grpc_realtime/lib/core/grpcgen"
 	"go_grpc_realtime/lib/core/interceptors"
 	"go_grpc_realtime/lib/features/user"
 	"log"
@@ -31,7 +31,7 @@ func RunServer() {
 	s := grpc.NewServer(opts...)
 
 	///Registering 'UserService'
-	userpb.RegisterUserServiceServer(s, user.InitAndGetUserServices())
+	grpcgen.RegisterUserServiceServer(s, user.InitAndGetUserServices())
 
 	///Registering reflection for API visualization using 'evans'
 	reflection.Register(s)
