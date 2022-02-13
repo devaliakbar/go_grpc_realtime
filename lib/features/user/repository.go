@@ -70,8 +70,8 @@ func (repo *repository) loginUp(req *grpcgen.LoginRequest) (*grpcgen.SignUpRespo
 	var usr UserTbl
 	if err := database.DB.Where("email = ?", req.GetEmail()).First(&usr).Error; err != nil {
 		return nil, status.Errorf(
-			codes.Unauthenticated,
-			"invalid email or password",
+			codes.NotFound,
+			"user not found",
 		)
 	}
 

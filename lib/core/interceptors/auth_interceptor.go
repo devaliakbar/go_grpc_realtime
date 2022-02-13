@@ -3,6 +3,7 @@ package interceptors
 import (
 	"context"
 	"go_grpc_realtime/lib/core/jwtmanager"
+	"go_grpc_realtime/lib/core/utils"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -10,11 +11,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//All route with auth required status
-var methodsAuthStatus = map[string]bool{
-	"/user.UserService/SignUp":     false,
-	"/user.UserService/GetUsers":   true,
-	"/user.UserService/UpdateUser": true,
+//All routes which auth is not required
+var authNotRequiredRoutes = []string{
+	"/user.UserService/SignUp",
+	"/user.UserService/Login",
 }
 
 func GetUnaryInterceptor() grpc.UnaryServerInterceptor {
@@ -50,7 +50,7 @@ func GetStreamInterceptor() grpc.StreamServerInterceptor {
 
 func authorize(ctx context.Context, method string) (uint, error) {
 	///If auth not required
-	if !methodsAuthStatus[method] {
+	if utils.CheckStringExist(authNotRequiredRoutes, method) {
 		return 0, nil
 	}
 
