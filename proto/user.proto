@@ -19,6 +19,11 @@ message SignUpResponse {
   string jwt_token = 2;
 }
 
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
 message GetUsersRequest {
   string search = 1;
   int32 skip = 2;
@@ -34,6 +39,7 @@ message UpdateUserRequest {
 
 service UserService {
   rpc SignUp(SignUpRequest) returns (SignUpResponse) {}
+  rpc Login(LoginRequest) returns (SignUpResponse) {}
   rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
   rpc UpdateUser(UpdateUserRequest) returns (User) {}
 }

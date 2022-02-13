@@ -44,3 +44,7 @@ func (ctr *UserController) UpdateUser(ctx context.Context, req *userpb.UpdateUse
 
 	return ctr.repository.updateUser(req, userId)
 }
+
+func (ctr *UserController) Login(ctx context.Context, req *userpb.LoginRequest) (*userpb.SignUpResponse, error) {
+	return ctr.loginUp(req)
+}

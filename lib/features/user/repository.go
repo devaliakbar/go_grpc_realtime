@@ -58,6 +58,33 @@ func (repo *repository) signUp(req *userpb.SignUpRequest) (*userpb.SignUpRespons
 	}, nil
 }
 
+func (repo *repository) loginUp(req *userpb.LoginRequest) (*userpb.SignUpResponse, error) {
+	var usr UserTbl
+	if err := database.DB.Where("email = ? AND password = ?", req.GetEmail(), req.GetPassword()).First(&usr).Error; err != nil {
+		return nil, status.Errorf(
+			codes.Unauthenticated,
+			"invalid username or password",
+		)
+	}
+
+	jwtTkn, jwtErr := jwtmanager.CreateToken(usr.ID)
+	if jwtErr != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			jwtErr.Error(),
+		)
+	}
+
+	return &userpb.SignUpResponse{
+		User: &userpb.User{
+			Id:       fmt.Sprint(usr.ID),
+			FullName: usr.FullName,
+			Email:    usr.Email,
+		},
+		JwtToken: jwtTkn,
+	}, nil
+}
+
 func (repo *repository) getUsers(req *userpb.GetUsersRequest) (*userpb.GetUsersResponse, error) {
 	skip := int(req.GetSkip())
 
