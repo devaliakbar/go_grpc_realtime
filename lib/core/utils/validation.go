@@ -2,7 +2,7 @@ package utils
 
 import (
 	"errors"
-	"go_grpc_realtime/lib/core/generated/userpb"
+	"go_grpc_realtime/lib/core/grpc_generated/userpb"
 	"net/mail"
 	"strings"
 )

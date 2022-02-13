@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"go_grpc_realtime/lib/core/generated/userpb"
+	"go_grpc_realtime/lib/core/grpc_generated/userpb"
 	"go_grpc_realtime/lib/core/jwtmanager"
 
 	"google.golang.org/grpc/codes"

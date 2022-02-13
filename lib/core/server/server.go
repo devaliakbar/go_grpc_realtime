@@ -2,7 +2,7 @@ package server
 
 import (
 	"go_grpc_realtime/lib/core/database"
-	"go_grpc_realtime/lib/core/generated/userpb"
+	"go_grpc_realtime/lib/core/grpc_generated/userpb"
 	"go_grpc_realtime/lib/core/interceptors"
 	"go_grpc_realtime/lib/features/user"
 	"log"

@@ -3,7 +3,7 @@ package user
 import (
 	"fmt"
 	"go_grpc_realtime/lib/core/database"
-	"go_grpc_realtime/lib/core/generated/userpb"
+	"go_grpc_realtime/lib/core/grpc_generated/userpb"
 	"go_grpc_realtime/lib/core/jwtmanager"
 	"go_grpc_realtime/lib/core/utils"
 	"strings"
