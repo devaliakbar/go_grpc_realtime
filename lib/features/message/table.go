@@ -6,10 +6,10 @@ import (
 )
 
 type RoomTbl struct {
-	ID          uint      `json:"id" gorm:"primary_key"`
-	Name        string    `json:"name" gorm:"not null"`
-	IsOneToOne  bool      `json:"is_one_to_one" gorm:"not null"`
-	LastUpdated time.Time `json:"last_update"`
+	ID          uint       `json:"id" gorm:"primary_key"`
+	Name        string     `json:"name" gorm:"not null"`
+	IsOneToOne  bool       `json:"is_one_to_one" gorm:"not null"`
+	LastUpdated *time.Time `json:"last_update"`
 }
 
 type RoomMembersTbl struct {
