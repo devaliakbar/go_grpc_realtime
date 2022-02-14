@@ -70,13 +70,14 @@ func (repo *repository) createMessageRoom(req *grpcgen.CreateMessageRoomRequest,
 
 	transactionDb := database.DB.Begin()
 
+	createdAt := time.Now()
+
 	room := RoomTbl{
 		Name:       roomName,
 		IsOneToOne: req.GetIsOneToOne(),
 	}
 	if !req.IsOneToOne {
-		lastUpdate := time.Now()
-		room.LastUpdated = &lastUpdate
+		room.LastUpdated = &createdAt
 	}
 	if crtRmErr := transactionDb.Create(&room).Error; crtRmErr != nil {
 		transactionDb.Rollback()
@@ -123,9 +124,10 @@ func (repo *repository) createMessageRoom(req *grpcgen.CreateMessageRoomRequest,
 	///If not One-To-One, add a message regarding who created group
 	if !req.IsOneToOne {
 		grpMsg := MessageTbl{
-			RoomId:   room.ID,
-			SenderId: uid,
-			Body:     "created group",
+			RoomId:    room.ID,
+			SenderId:  uid,
+			Body:      "created group",
+			CreatedAt: createdAt,
 		}
 		if addMesErr := transactionDb.Create(&grpMsg).Error; addMesErr != nil {
 			transactionDb.Rollback()
