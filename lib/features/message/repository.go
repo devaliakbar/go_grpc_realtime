@@ -221,6 +221,7 @@ func (repo *repository) getMessageRooms(req *grpcgen.GetMessageRoomsRequest, uid
 
 		for _, member := range members {
 			if member.ID != uid {
+				///If chat is one to one, set room name to end user name
 				if room.IsOneToOne {
 					roomName = member.FullName
 				}
