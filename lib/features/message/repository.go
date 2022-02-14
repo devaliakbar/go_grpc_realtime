@@ -247,3 +247,63 @@ func (repo *repository) getMessageRooms(req *grpcgen.GetMessageRoomsRequest, uid
 		Rooms: rooms,
 	}, nil
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+func (repo *repository) getMessageRoomDetails(req *grpcgen.GetMessageRoomDetailsRequest, uid uint) (*grpcgen.MessageRoom, error) {
+	members := []user.UserQuery{}
+	database.DB.Table("user_tbls").
+		Joins("inner join room_members_tbls on room_members_tbls.user_id = user_tbls.id").
+		Select("user_tbls.id as id,user_tbls.full_name as full_name, user_tbls.email as email").
+		Order("user_tbls.full_name asc").
+		Find(&members, "room_members_tbls.room_id = ?", req.GetRoomId())
+
+	if len(members) < 2 {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"room not found",
+		)
+	}
+
+	roomMembs := []*grpcgen.User{}
+
+	isCurrentUserExistInThisRoom := false
+	for _, member := range members {
+		if member.ID == uid {
+			isCurrentUserExistInThisRoom = true
+		} else {
+			roomMembs = append(roomMembs, &grpcgen.User{
+				Id:       fmt.Sprint(member.ID),
+				FullName: member.FullName,
+				Email:    member.Email,
+			})
+		}
+	}
+
+	if !isCurrentUserExistInThisRoom {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"room not found",
+		)
+	}
+
+	var room RoomTbl
+	if err := database.DB.Where("id = ?", req.GetRoomId()).First(&room).Error; err != nil {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"room not found",
+		)
+	}
+
+	roomName := room.Name
+	if room.IsOneToOne {
+		roomName = roomMembs[0].FullName
+	}
+
+	return &grpcgen.MessageRoom{
+		Id:         fmt.Sprint(room.ID),
+		RoomName:   roomName,
+		IsOneToOne: room.IsOneToOne,
+		Members:    roomMembs,
+	}, nil
+}

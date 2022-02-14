@@ -57,9 +57,16 @@ func (ctr *MessageController) GetMessageRooms(ctx context.Context, req *grpcgen.
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-func (ctr *MessageController) GetMessageRoomMembers(ctx context.Context, req *grpcgen.GetMessageRoomMembersRequest) (*grpcgen.GetMessageRoomMembersResponse, error) {
-	log.Println("GetRoomsMem")
-	return nil, nil
+func (ctr *MessageController) GetMessageRoomDetails(ctx context.Context, req *grpcgen.GetMessageRoomDetailsRequest) (*grpcgen.MessageRoom, error) {
+	userId, ok := ctx.Value(jwtmanager.USER_ID_KEY).(uint)
+	if !ok {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"user not found",
+		)
+	}
+
+	return ctr.getMessageRoomDetails(req, userId)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

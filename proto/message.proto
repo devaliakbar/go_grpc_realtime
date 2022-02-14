@@ -28,12 +28,11 @@ message GetMessageRoomsRequest {
 }
 message GetMessageRoomsResponse { repeated MessageRoom rooms = 1; }
 
-message GetMessageRoomMembersRequest { string room_id = 1; }
-message GetMessageRoomMembersResponse { repeated user.User members = 2; }
+message GetMessageRoomDetailsRequest { string room_id = 1; }
 
 message Message {
   string id = 1;
-  MessageRoom room = 2;
+  string room_id = 2;
   user.User sender = 3;
   string time = 4;
   string body = 5;
@@ -55,8 +54,8 @@ service MessageService {
   rpc CreateMessageRoom(CreateMessageRoomRequest) returns (MessageRoom) {}
   rpc GetMessageRooms(GetMessageRoomsRequest)
       returns (GetMessageRoomsResponse) {}
-  rpc GetMessageRoomMembers(GetMessageRoomMembersRequest)
-      returns (GetMessageRoomMembersResponse) {}
+  rpc GetMessageRoomDetails(GetMessageRoomDetailsRequest)
+      returns (MessageRoom) {}
   rpc SendMessage(SendMessageRequest) returns (Message) {}
   rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse) {}
 }
