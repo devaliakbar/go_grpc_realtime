@@ -184,3 +184,63 @@ func checkRoomAlreadyExist(uid uint, membs []uint) *grpcgen.MessageRoom {
 		},
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+func (repo *repository) getMessageRooms(req *grpcgen.GetMessageRoomsRequest, uid uint) (*grpcgen.GetMessageRoomsResponse, error) {
+	skip := int(req.GetSkip())
+
+	take := 10
+	if req.GetTake() != 0 {
+		take = int(req.GetTake())
+		if take > 100 {
+			take = 100
+		}
+	}
+
+	roomsArr := []MessageRoomQuery{}
+
+	database.DB.Table("room_tbls").
+		Joins("inner join room_members_tbls on room_members_tbls.room_id = room_tbls.id").
+		Select("room_tbls.id as id,room_tbls.name as room_name, room_tbls.is_one_to_one as is_one_to_one").
+		Order("room_tbls.last_updated desc").
+		Offset(skip).Limit(take).
+		Find(&roomsArr, "room_tbls.last_updated IS NOT NULL and room_members_tbls.user_id = ?", uid)
+
+	rooms := []*grpcgen.MessageRoom{}
+	for _, room := range roomsArr {
+		roomName := room.RoomName
+		roomMembs := []*grpcgen.User{}
+
+		members := []user.UserQuery{}
+		database.DB.Table("user_tbls").
+			Joins("inner join room_members_tbls on room_members_tbls.user_id = user_tbls.id").
+			Select("user_tbls.id as id,user_tbls.full_name as full_name, user_tbls.email as email").
+			Order("user_tbls.full_name asc").
+			Find(&members, "room_members_tbls.room_id = ?", room.ID)
+
+		for _, member := range members {
+			if member.ID != uid {
+				if room.IsOneToOne {
+					roomName = member.FullName
+				}
+				roomMembs = append(roomMembs, &grpcgen.User{
+					Id:       fmt.Sprint(member.ID),
+					FullName: member.FullName,
+					Email:    member.Email,
+				})
+			}
+		}
+
+		rooms = append(rooms, &grpcgen.MessageRoom{
+			Id:         fmt.Sprint(room.ID),
+			RoomName:   roomName,
+			IsOneToOne: room.IsOneToOne,
+			Members:    roomMembs,
+		})
+	}
+
+	return &grpcgen.GetMessageRoomsResponse{
+		Rooms: rooms,
+	}, nil
+}
