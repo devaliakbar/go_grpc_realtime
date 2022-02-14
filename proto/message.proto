@@ -24,6 +24,7 @@ message GetMessageRoomsRequest {
   string search = 1;
   int32 skip = 2;
   int32 take = 3;
+  bool get_group_members = 4;
 }
 message GetMessageRoomsResponse { repeated MessageRoom rooms = 1; }
 
