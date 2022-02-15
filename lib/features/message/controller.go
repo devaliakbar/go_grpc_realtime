@@ -101,15 +101,17 @@ func (ctr *MessageController) SendMessage(ctx context.Context, req *grpcgen.Send
 
 	roomMembers, message, err := ctr.sendMessage(req, userId)
 
-	for _, mem := range roomMembers {
-		ctr.mu.Lock()
-		for _, msgListener := range ctr.messageListeners {
-			if msgListener.UserId == mem.UserId {
-				msgListener.Channel <- message
+	go func() {
+		for _, mem := range roomMembers {
+			ctr.mu.Lock()
+			for _, msgListener := range ctr.messageListeners {
+				if msgListener.UserId == mem.UserId {
+					msgListener.Channel <- message
+				}
 			}
+			ctr.mu.Unlock()
 		}
-		ctr.mu.Unlock()
-	}
+	}()
 
 	return message, err
 }
