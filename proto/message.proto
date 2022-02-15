@@ -50,6 +50,9 @@ message GetMessagesRequest {
 }
 message GetMessagesResponse { repeated Message messages = 1; }
 
+message ListenToNewMessageRequest {}
+message ListenToNewMessageResponse { Message newMessage = 1; }
+
 service MessageService {
   rpc CreateMessageRoom(CreateMessageRoomRequest) returns (MessageRoom) {}
   rpc GetMessageRooms(GetMessageRoomsRequest)
@@ -58,4 +61,6 @@ service MessageService {
       returns (MessageRoom) {}
   rpc SendMessage(SendMessageRequest) returns (Message) {}
   rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse) {}
+  rpc ListenToNewMessage(ListenToNewMessageRequest)
+      returns (stream ListenToNewMessageResponse) {}
 }

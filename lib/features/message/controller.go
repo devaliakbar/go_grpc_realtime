@@ -4,14 +4,18 @@ import (
 	"context"
 	"go_grpc_realtime/lib/core/grpcgen"
 	"go_grpc_realtime/lib/core/jwtmanager"
+	"sync"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type MessageController struct {
+	mu sync.Mutex
 	grpcgen.UnimplementedMessageServiceServer
 	*repository
+	messageListeners map[uuid.UUID]*MessageListener
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,4 +98,34 @@ func (ctr *MessageController) GetMessages(ctx context.Context, req *grpcgen.GetM
 	}
 
 	return ctr.getMessages(req, userId)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+func (ctr *MessageController) ListenToNewMessage(req *grpcgen.ListenToNewMessageRequest, stream grpcgen.MessageService_ListenToNewMessageServer) error {
+	uid := uint(12)
+
+	ctr.mu.Lock()
+	key := uuid.New()
+	msgChannel := make(chan *grpcgen.Message)
+	ctr.messageListeners[key] = &MessageListener{
+		UserId:  uid,
+		Channel: msgChannel,
+	}
+	ctr.mu.Unlock()
+
+	for {
+		select {
+		case <-stream.Context().Done():
+			ctr.mu.Lock()
+			delete(ctr.messageListeners, key)
+			ctr.mu.Unlock()
+
+			return nil
+		case msg := <-msgChannel:
+			stream.Send(&grpcgen.ListenToNewMessageResponse{
+				NewMessage: msg,
+			})
+		}
+	}
 }

@@ -1,6 +1,9 @@
 package message
 
-import "time"
+import (
+	"go_grpc_realtime/lib/core/grpcgen"
+	"time"
+)
 
 type MessageRoomQuery struct {
 	ID         uint   `json:"id"`
@@ -16,4 +19,9 @@ type MessageQuery struct {
 	SenderId    uint      `json:"sender_id"`
 	SenderName  string    `json:"sender_name"`
 	SenderEmail string    `json:"sender_email"`
+}
+
+type MessageListener struct {
+	UserId  uint
+	Channel chan *grpcgen.Message
 }
