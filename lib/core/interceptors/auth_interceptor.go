@@ -24,7 +24,7 @@ func GetUnaryInterceptor() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-		userId, err := authorize(ctx, info.FullMethod)
+		userId, err := checkAuthorization(ctx, info.FullMethod)
 		if err != nil {
 			return nil, err
 		}
@@ -36,25 +36,17 @@ func GetUnaryInterceptor() grpc.UnaryServerInterceptor {
 	}
 }
 
-func GetStreamInterceptor() grpc.StreamServerInterceptor {
-	return func(
-		srv interface{},
-		stream grpc.ServerStream,
-		info *grpc.StreamServerInfo,
-		handler grpc.StreamHandler,
-	) error {
-
-		return handler(srv, stream)
-	}
-}
-
-func authorize(ctx context.Context, method string) (uint, error) {
+func checkAuthorization(ctx context.Context, method string) (uint, error) {
 	///If auth not required
 	if utils.CheckStringExist(authNotRequiredRoutes, method) {
 		return 0, nil
 	}
 
 	///If auth required
+	return GetUserIdFromHeader(ctx)
+}
+
+func GetUserIdFromHeader(ctx context.Context) (uint, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return 0, status.Errorf(codes.Unauthenticated, "metadata is not provided")

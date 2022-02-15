@@ -3,13 +3,13 @@ module go_grpc_realtime
 go 1.17
 
 require (
+	github.com/google/uuid v1.3.0
 	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gorm.io/gorm v1.22.3
 )
 
 require (
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/mattn/go-sqlite3 v1.14.9 // indirect
 )

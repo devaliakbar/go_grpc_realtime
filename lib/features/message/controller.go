@@ -3,6 +3,7 @@ package message
 import (
 	"context"
 	"go_grpc_realtime/lib/core/grpcgen"
+	"go_grpc_realtime/lib/core/interceptors"
 	"go_grpc_realtime/lib/core/jwtmanager"
 	"sync"
 
@@ -26,7 +27,8 @@ func InitAndGetMessageServices() grpcgen.MessageServiceServer {
 	repo.migrateDb()
 
 	return &MessageController{
-		repository: repo,
+		repository:       repo,
+		messageListeners: map[uuid.UUID]*MessageListener{},
 	}
 }
 
@@ -74,20 +76,6 @@ func (ctr *MessageController) GetMessageRoomDetails(ctx context.Context, req *gr
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-func (ctr *MessageController) SendMessage(ctx context.Context, req *grpcgen.SendMessageRequest) (*grpcgen.Message, error) {
-	userId, ok := ctx.Value(jwtmanager.USER_ID_KEY).(uint)
-	if !ok {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"user not found",
-		)
-	}
-
-	return ctr.sendMessage(req, userId)
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 func (ctr *MessageController) GetMessages(ctx context.Context, req *grpcgen.GetMessagesRequest) (*grpcgen.GetMessagesResponse, error) {
 	userId, ok := ctx.Value(jwtmanager.USER_ID_KEY).(uint)
 	if !ok {
@@ -102,8 +90,37 @@ func (ctr *MessageController) GetMessages(ctx context.Context, req *grpcgen.GetM
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+func (ctr *MessageController) SendMessage(ctx context.Context, req *grpcgen.SendMessageRequest) (*grpcgen.Message, error) {
+	userId, ok := ctx.Value(jwtmanager.USER_ID_KEY).(uint)
+	if !ok {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"user not found",
+		)
+	}
+
+	roomMembers, message, err := ctr.sendMessage(req, userId)
+
+	for _, mem := range roomMembers {
+		ctr.mu.Lock()
+		for _, msgListener := range ctr.messageListeners {
+			if msgListener.UserId == mem.UserId {
+				msgListener.Channel <- message
+			}
+		}
+		ctr.mu.Unlock()
+	}
+
+	return message, err
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 func (ctr *MessageController) ListenToNewMessage(req *grpcgen.ListenToNewMessageRequest, stream grpcgen.MessageService_ListenToNewMessageServer) error {
-	uid := uint(12)
+	uid, err := interceptors.GetUserIdFromHeader(stream.Context())
+	if err != nil {
+		return err
+	}
 
 	ctr.mu.Lock()
 	key := uuid.New()

@@ -26,7 +26,6 @@ func RunServer() {
 
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(interceptors.GetUnaryInterceptor()),
-		grpc.StreamInterceptor(interceptors.GetStreamInterceptor()),
 	}
 
 	s := grpc.NewServer(opts...)

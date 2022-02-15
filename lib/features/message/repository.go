@@ -361,19 +361,28 @@ func (repo *repository) getMessages(req *grpcgen.GetMessagesRequest, uid uint) (
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-func (repo *repository) sendMessage(req *grpcgen.SendMessageRequest, uid uint) (*grpcgen.Message, error) {
+func (repo *repository) sendMessage(req *grpcgen.SendMessageRequest, uid uint) ([]RoomMembersTbl, *grpcgen.Message, error) {
 	var usr user.UserTbl
 	if err := database.DB.Where("id = ?", uid).First(&usr).Error; err != nil {
-		return nil, status.Errorf(
+		return nil, nil, status.Errorf(
 			codes.NotFound,
 			"user not found",
 		)
 	}
 
+	var members []RoomMembersTbl
+	database.DB.Find(&members, "room_id = ?", req.GetRoomId())
+
 	///Checking current user is member of this room
-	roomMemb := RoomMembersTbl{}
-	if err := database.DB.Where("room_id = ? AND user_id = ?", req.GetRoomId(), uid).First(&roomMemb).Error; err != nil {
-		return nil, status.Errorf(
+	isCurrentUserExist := false
+	for _, mem := range members {
+		if mem.UserId == uid {
+			isCurrentUserExist = true
+			break
+		}
+	}
+	if !isCurrentUserExist {
+		return nil, nil, status.Errorf(
 			codes.NotFound,
 			"room not found",
 		)
@@ -386,13 +395,13 @@ func (repo *repository) sendMessage(req *grpcgen.SendMessageRequest, uid uint) (
 		Body:     req.GetBody(),
 	}
 	if err := database.DB.Create(&message).Error; err != nil {
-		return nil, status.Errorf(
+		return nil, nil, status.Errorf(
 			codes.Internal,
 			err.Error(),
 		)
 	}
 
-	return &grpcgen.Message{
+	return members, &grpcgen.Message{
 		Id:     fmt.Sprint(message.ID),
 		RoomId: fmt.Sprint(message.RoomId),
 		Sender: &grpcgen.User{
