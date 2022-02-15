@@ -79,6 +79,13 @@ func (ctr *MessageController) SendMessage(ctx context.Context, req *grpcgen.Send
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 func (ctr *MessageController) GetMessages(ctx context.Context, req *grpcgen.GetMessagesRequest) (*grpcgen.GetMessagesResponse, error) {
-	log.Println("Get mes")
-	return nil, nil
+	userId, ok := ctx.Value(jwtmanager.USER_ID_KEY).(uint)
+	if !ok {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"user not found",
+		)
+	}
+
+	return ctr.getMessages(req, userId)
 }
