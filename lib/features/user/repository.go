@@ -156,7 +156,7 @@ func (repo *repository) updateUser(req *grpcgen.UpdateUserRequest, userId uint) 
 	if err := database.DB.Where("id = ?", userId).First(&usr).Error; err != nil {
 		return nil, status.Errorf(
 			codes.NotFound,
-			"User not found",
+			"user not found",
 		)
 	}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"go_grpc_realtime/lib/core/grpcgen"
 	"go_grpc_realtime/lib/core/jwtmanager"
-	"log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -72,8 +71,15 @@ func (ctr *MessageController) GetMessageRoomDetails(ctx context.Context, req *gr
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 func (ctr *MessageController) SendMessage(ctx context.Context, req *grpcgen.SendMessageRequest) (*grpcgen.Message, error) {
-	log.Println("SendMes")
-	return nil, nil
+	userId, ok := ctx.Value(jwtmanager.USER_ID_KEY).(uint)
+	if !ok {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"user not found",
+		)
+	}
+
+	return ctr.sendMessage(req, userId)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

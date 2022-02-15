@@ -6,6 +6,7 @@ import (
 	"go_grpc_realtime/lib/core/grpcgen"
 	"go_grpc_realtime/lib/core/utils"
 	"go_grpc_realtime/lib/features/user"
+	"strconv"
 	"strings"
 	"time"
 
@@ -355,5 +356,51 @@ func (repo *repository) getMessages(req *grpcgen.GetMessagesRequest, uid uint) (
 
 	return &grpcgen.GetMessagesResponse{
 		Messages: messages,
+	}, nil
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+func (repo *repository) sendMessage(req *grpcgen.SendMessageRequest, uid uint) (*grpcgen.Message, error) {
+	var usr user.UserTbl
+	if err := database.DB.Where("id = ?", uid).First(&usr).Error; err != nil {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"user not found",
+		)
+	}
+
+	///Checking current user is member of this room
+	roomMemb := RoomMembersTbl{}
+	if err := database.DB.Where("room_id = ? AND user_id = ?", req.GetRoomId(), uid).First(&roomMemb).Error; err != nil {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"room not found",
+		)
+	}
+
+	roomId, _ := strconv.Atoi(req.GetRoomId())
+	message := MessageTbl{
+		RoomId:   uint(roomId),
+		SenderId: uid,
+		Body:     req.GetBody(),
+	}
+	if err := database.DB.Create(&message).Error; err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			err.Error(),
+		)
+	}
+
+	return &grpcgen.Message{
+		Id:     fmt.Sprint(message.ID),
+		RoomId: fmt.Sprint(message.RoomId),
+		Sender: &grpcgen.User{
+			Id:       fmt.Sprint(usr.ID),
+			FullName: usr.FullName,
+			Email:    usr.Email,
+		},
+		Time: message.CreatedAt.Unix(),
+		Body: message.Body,
 	}, nil
 }
