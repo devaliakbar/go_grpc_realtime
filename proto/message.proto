@@ -34,7 +34,7 @@ message Message {
   string id = 1;
   string room_id = 2;
   user.User sender = 3;
-  string time = 4;
+  int64 time = 4;
   string body = 5;
 }
 

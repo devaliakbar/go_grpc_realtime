@@ -311,6 +311,49 @@ func (repo *repository) getMessageRoomDetails(req *grpcgen.GetMessageRoomDetails
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 func (repo *repository) getMessages(req *grpcgen.GetMessagesRequest, uid uint) (*grpcgen.GetMessagesResponse, error) {
+	///Checking current user is member of this room
+	roomMemb := RoomMembersTbl{}
+	if err := database.DB.Where("room_id = ? AND user_id = ?", req.GetRoomId(), uid).First(&roomMemb).Error; err != nil {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"room not found",
+		)
+	}
 
-	return nil, nil
+	skip := int(req.GetSkip())
+
+	take := 10
+	if req.GetTake() != 0 {
+		take = int(req.GetTake())
+		if take > 100 {
+			take = 100
+		}
+	}
+
+	messageArr := []MessageQuery{}
+	database.DB.Table("message_tbls").
+		Joins("inner join user_tbls on user_tbls.id = message_tbls.sender_id").
+		Select("message_tbls.id as message_id, message_tbls.created_at AS created_time,message_tbls.body as message,message_tbls.room_id as room_id, message_tbls.sender_id as sender_id, user_tbls.full_name as sender_name,user_tbls.email as sender_email").
+		Order("message_tbls.created_at DESC").
+		Offset(skip).Limit(take).
+		Find(&messageArr, "message_tbls.room_id = ?", req.GetRoomId())
+
+	messages := []*grpcgen.Message{}
+	for _, message := range messageArr {
+		messages = append(messages, &grpcgen.Message{
+			Id:     fmt.Sprint(message.MessageId),
+			RoomId: fmt.Sprint(message.RoomId),
+			Sender: &grpcgen.User{
+				Id:       fmt.Sprint(message.SenderId),
+				FullName: message.SenderName,
+				Email:    message.SenderEmail,
+			},
+			Time: message.CreatedTime.Unix(),
+			Body: message.Message,
+		})
+	}
+
+	return &grpcgen.GetMessagesResponse{
+		Messages: messages,
+	}, nil
 }
