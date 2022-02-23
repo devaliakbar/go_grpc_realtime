@@ -394,13 +394,27 @@ func (repo *repository) sendMessage(req *grpcgen.SendMessageRequest, uid uint) (
 		SenderId: uid,
 		Body:     req.GetBody(),
 	}
-	if err := database.DB.Create(&message).Error; err != nil {
+
+	transactionDb := database.DB.Begin()
+	if err := transactionDb.Create(&message).Error; err != nil {
+		transactionDb.Rollback()
 		return nil, nil, status.Errorf(
 			codes.Internal,
 			err.Error(),
 		)
 	}
 
+	updateBody := map[string]interface{}{}
+	updateBody["last_updated"] = message.CreatedAt
+	if err := transactionDb.Table("room_tbls").Where("id = ?", req.GetRoomId()).Updates(updateBody).Error; err != nil {
+		transactionDb.Rollback()
+		return nil, nil, status.Errorf(
+			codes.NotFound,
+			"room not found",
+		)
+	}
+
+	transactionDb.Commit()
 	return members, &grpcgen.Message{
 		Id:     fmt.Sprint(message.ID),
 		RoomId: fmt.Sprint(message.RoomId),
